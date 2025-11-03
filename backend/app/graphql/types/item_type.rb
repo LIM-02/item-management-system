@@ -8,5 +8,9 @@ module Types
     field :name, String, null: false
     field :category, String, null: false
     field :price, Float, null: false
+
+    def price
+      object.price.to_f
+    end
   end
 end
