@@ -1,45 +1,64 @@
 "use client";
 
+import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { useEffect, useMemo, useState } from "react";
 
 type Item = {
   id: string;
   name: string;
   category: string;
-  price: number; 
-
+  price: number;
 };
 
-// Sample data
-const ITEMS: Item[] = [
-  { id: "1", name: "Laptop", category: "Electronics", price: 1200 },
-  { id: "2", name: "Chair", category: "Furniture", price: 150 },
-  { id: "3", name: "Pen", category: "Stationery", price: 3 },
-  { id: "4", name: "Headphones", category: "Electronics", price: 200 },
-  { id: "5", name: "Notebook", category: "Stationery", price: 5 },
-];
+const EMPTY_ITEMS: Item[] = [];
+
+type GetItemsData = {
+  items: Item[];
+};
+
+const GET_ITEMS = gql`
+  query GetItems {
+    items {
+      id
+      name
+      category
+      price
+    }
+  }
+`;
 
 export default function DashboardPage() {
+  const { data, loading, error } = useQuery<GetItemsData>(GET_ITEMS);
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("All");
   const [showFavOnly, setShowFavOnly] = useState(false);
-  const [favs, setFavs] = useState<Set<string>>(new Set());
+  const [favs, setFavs] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") {
+      return new Set();
+    }
+    try {
+      const raw = window.localStorage.getItem("favs");
+      return raw ? new Set<string>(JSON.parse(raw)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
-  // Load + save favourites in localStorage (optional, still simple)
-  useEffect(() => {
-    // replace with API call - fetchFavorites()
-    const raw = typeof window !== "undefined" ? localStorage.getItem("favs") : null;
-    if (raw) setFavs(new Set(JSON.parse(raw)));
-  }, []);
+  const items = data?.items ?? EMPTY_ITEMS;
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("favs", JSON.stringify(Array.from(favs)));
     }
   }, [favs]);
 
-  const categories = useMemo(() => ["All", ...Array.from(new Set(ITEMS.map(i => i.category)))], []);
+  const categories = useMemo(() => {
+    const uniqueCategories = Array.from(new Set(items.map((item) => item.category)));
+    return ["All", ...uniqueCategories];
+  }, [items]);
 
-  const filtered = ITEMS.filter((item) => {
+  const filtered = items.filter((item) => {
     const matchCategory = category === "All" || item.category === category;
     const q = search.toLowerCase();
     const matchSearch = item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q);
@@ -89,11 +108,16 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ marginTop: "10px", color: "#666", fontSize: "14px" }}>
-        Showing {filtered.length} of {ITEMS.length}
+        {loading && "Loading items..."}
+        {!loading && !error && `Showing ${filtered.length} of ${items.length}`}
+        {error && <span style={{ color: "#c00" }}>Failed to load items.</span>}
       </div>
 
       <ul style={{ marginTop: "12px", listStyle: "none", padding: 0 }}>
-        {filtered.map((item) => {
+        {loading && (
+          <li style={{ padding: "10px", color: "#666" }}>Loading catalogue...</li>
+        )}
+        {!loading && filtered.map((item) => {
           const isFav = favs.has(item.id);
           return (
             <li
@@ -131,7 +155,12 @@ export default function DashboardPage() {
         })}
       </ul>
 
-      {filtered.length === 0 && <p>No items found.</p>}
+      {!loading && !error && filtered.length === 0 && <p>No items found.</p>}
+      {error && (
+        <p style={{ color: "#b00" }}>
+          Unable to load items. Please try again later.
+        </p>
+      )}
     </div>
   );
 }
