@@ -1,13 +1,10 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 
-const DEFAULT_GRAPHQL_URL = "https://item-management-system.onrender.com/graphql";
+const FALLBACK_RENDER_URL = "https://item-management-system-f5bd.onrender.com/graphql";
+const FALLBACK_LOCAL_URL = "http://localhost:3001/graphql";
 
-const graphqlUrl = process.env.NEXT_PUBLIC_GRAPHQL_URL ?? DEFAULT_GRAPHQL_URL;
-
-if (!graphqlUrl.startsWith("http")) {
-  throw new Error(`Invalid GraphQL URL baked into bundle: ${graphqlUrl}`);
-}
-console.log("Apollo GraphQL URL =>", graphqlUrl);
+const defaultUrl = process.env.NODE_ENV === "production" ? FALLBACK_RENDER_URL : FALLBACK_LOCAL_URL;
+const graphqlUrl = process.env.NEXT_PUBLIC_GRAPHQL_URL?.trim() || defaultUrl;
 
 export const createApolloClient = () =>
   new ApolloClient({

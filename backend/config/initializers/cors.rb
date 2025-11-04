@@ -5,12 +5,16 @@
 
 # Read more: https://github.com/cyu/rack-cors
 
-frontend_origin = ENV.fetch("FRONTEND_ORIGIN", "https://item-management-system-frontend.onrender.com")
+default_origin = "https://item-management-system-frontend.onrender.com"
+raw_origins = ENV.fetch("CORS_ORIGINS", default_origin)
+allowed_origins = raw_origins.split(",").map(&:strip).reject(&:empty?)
+allowed_origins << "http://localhost:3000"
+allowed_origins.uniq!
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     # Allow requests from the deployed frontend and local dev
-    origins frontend_origin, "http://localhost:3000"
+    origins(*allowed_origins)
 
     resource "*",
       headers: :any,
