@@ -7,13 +7,13 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins ENV.fetch("CORS_ORIGINS", "")
-      .split(",")
-      .map(&:strip)
+    # Allow requests from your frontend on Render + localhost (for dev)
+    origins "https://item-management-system-frontend.onrender.com", "http://localhost:3000"
 
+    # Only expose GraphQL and preflight routes
     resource "/graphql",
       headers: :any,
       methods: [:post, :options],
-      max_age: 600
+      credentials: false
   end
 end
