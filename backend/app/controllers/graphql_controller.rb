@@ -7,7 +7,6 @@ class GraphqlController < ApplicationController
   # protect_from_forgery with: :null_session
 
   # Disable CSRF protection for API requests
-  protect_from_forgery with: :null_session
   skip_forgery_protection
 
   def execute
