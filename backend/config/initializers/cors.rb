@@ -1,7 +1,12 @@
 # config/initializers/cors.rb
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "https://item-management-system-frontend.onrender.com", "http://localhost:3000"
+    allowed = ENV.fetch("CORS_ORIGINS", "")
+                 .split(/[,\s]+/)
+                 .map(&:strip)
+                 .reject(&:empty?)
+
+    origins(*allowed)
 
     resource "/graphql",
       headers: :any,
