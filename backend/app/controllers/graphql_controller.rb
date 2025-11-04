@@ -7,7 +7,7 @@ class GraphqlController < ApplicationController
   # protect_from_forgery with: :null_session
 
   # Disable CSRF protection for API requests (GraphQL called cross-origin)
-  skip_forgery_protection
+  protect_from_forgery with: :null_session
 
   def execute
     variables = prepare_variables(params[:variables])
