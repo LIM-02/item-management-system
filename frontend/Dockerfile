@@ -1,22 +1,18 @@
 # syntax=docker/dockerfile:1
-
 FROM node:20-alpine
 
 WORKDIR /app
-
-ENV NODE_ENV=development \
+ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1
 
-RUN apk add --no-cache bash
-
+# install deps
 COPY package.json package-lock.json ./
+RUN npm ci
 
-RUN npm install
-
+# copy source & build
 COPY . .
+RUN npm run build
 
-ENTRYPOINT ["sh", "./docker-entrypoint.sh"]
-
+# Render sets PORT at runtime; next start will read it.
 EXPOSE 3000
-
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]
