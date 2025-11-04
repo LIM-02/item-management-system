@@ -1,6 +1,6 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 
-const DEFAULT_GRAPHQL_URL = "http://localhost:3001/graphql";
+const DEFAULT_GRAPHQL_URL = "https://item-management-system.onrender.com/graphql";
 
 const graphqlUrl = process.env.NEXT_PUBLIC_GRAPHQL_URL ?? DEFAULT_GRAPHQL_URL;
 
