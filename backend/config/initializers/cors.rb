@@ -7,10 +7,13 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins ENV.fetch("CORS_ORIGINS", "http://localhost:3000"), "https://item-management-system-frontend.onrender.com"
+    origins ENV.fetch("CORS_ORIGINS", "")
+      .split(",")
+      .map(&:strip)
 
-    resource "*",
+    resource "/graphql",
       headers: :any,
-      methods: [:get, :post, :put, :patch, :delete, :options, :head]
+      methods: [:post, :options],
+      max_age: 600
   end
 end
