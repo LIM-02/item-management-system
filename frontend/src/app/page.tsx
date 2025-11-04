@@ -1,8 +1,8 @@
 "use client";
 
 import { gql } from "@apollo/client";
-import { useQuery } from "@apollo/client/react";
-import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 type Item = {
   id: string;
@@ -17,6 +17,21 @@ type GetItemsData = {
   items: Item[];
 };
 
+type CreateItemResult = {
+  createItem: {
+    item: Item | null;
+    errors: string[];
+  };
+};
+
+type CreateItemVariables = {
+  input: {
+    name: string;
+    category: string;
+    price: number;
+  };
+};
+
 const GET_ITEMS = gql`
   query GetItems {
     items {
@@ -28,8 +43,22 @@ const GET_ITEMS = gql`
   }
 `;
 
+const CREATE_ITEM = gql`
+  mutation CreateItem($input: CreateItemInput!) {
+    createItem(input: $input) {
+      item {
+        id
+        name
+        category
+        price
+      }
+      errors
+    }
+  }
+`;
+
 export default function DashboardPage() {
-  const { data, loading, error } = useQuery<GetItemsData>(GET_ITEMS);
+  const { data, loading, error, refetch } = useQuery<GetItemsData>(GET_ITEMS);
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("All");
@@ -45,6 +74,37 @@ export default function DashboardPage() {
       return new Set();
     }
   });
+
+  const [newName, setNewName] = useState("");
+  const [newCategory, setNewCategory] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+
+  const [createItem, { loading: creating, error: createError }] = useMutation<CreateItemResult, CreateItemVariables>(
+    CREATE_ITEM,
+    {
+      onCompleted: (result) => {
+        const response = result.createItem;
+        if (!response) {
+          setSubmissionError("Unexpected response from server.");
+          return;
+        }
+
+        if (response.errors.length > 0) {
+          setSubmissionError(response.errors.join(", "));
+          return;
+        }
+
+        setSubmissionError(null);
+        setFormError(null);
+        setNewName("");
+        setNewCategory("");
+        setNewPrice("");
+        void refetch();
+      },
+    },
+  );
 
   const items = data?.items ?? EMPTY_ITEMS;
   useEffect(() => {
@@ -74,9 +134,109 @@ export default function DashboardPage() {
     });
   };
 
+  const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedName = newName.trim();
+    const trimmedCategory = newCategory.trim();
+    const parsedPrice = Number(newPrice);
+
+    if (!trimmedName || !trimmedCategory) {
+      setFormError("Name and category are required.");
+      return;
+    }
+
+    if (!Number.isFinite(parsedPrice)) {
+      setFormError("Price must be a valid number.");
+      return;
+    }
+
+    if (parsedPrice < 0) {
+      setFormError("Price cannot be negative.");
+      return;
+    }
+
+    setFormError(null);
+    setSubmissionError(null);
+
+    try {
+      await createItem({
+        variables: {
+          input: {
+            name: trimmedName,
+            category: trimmedCategory,
+            price: parsedPrice,
+          },
+        },
+      });
+    } catch {
+      setSubmissionError("Failed to create item. Please try again.");
+    }
+  };
+
   return (
     <div style={{ padding: "20px", fontFamily: "Arial" }}>
       <h1>Item Dashboard</h1>
+
+      <form
+        onSubmit={handleCreate}
+        style={{
+          display: "grid",
+          gap: "8px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          marginTop: "16px",
+          border: "1px solid #ddd",
+          borderRadius: "6px",
+          padding: "12px",
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Item name"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          required
+          style={{ padding: "8px" }}
+        />
+        <input
+          type="text"
+          placeholder="Category"
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value)}
+          required
+          style={{ padding: "8px" }}
+        />
+        <input
+          type="number"
+          placeholder="Price"
+          value={newPrice}
+          onChange={(e) => setNewPrice(e.target.value)}
+          min="0"
+          step="0.01"
+          required
+          style={{ padding: "8px" }}
+        />
+        <button
+          type="submit"
+          style={{
+            padding: "8px",
+            background: "#222",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: creating ? "wait" : "pointer",
+          }}
+          disabled={creating}
+        >
+          {creating ? "Creating..." : "Add item"}
+        </button>
+      </form>
+
+      {(formError || submissionError || createError) && (
+        <div style={{ marginTop: "8px", color: "#b00", fontSize: "14px" }}>
+          {formError ?? submissionError ?? createError?.message}
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: "8px", marginTop: "10px", alignItems: "center" }}>
         <input
