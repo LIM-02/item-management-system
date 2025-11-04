@@ -5,15 +5,16 @@
 
 # Read more: https://github.com/cyu/rack-cors
 
+frontend_origin = ENV.fetch("FRONTEND_ORIGIN", "https://item-management-system-frontend.onrender.com")
+
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    # Allow requests from your frontend on Render + localhost (for dev)
-    origins "https://item-management-system-frontend.onrender.com", "http://localhost:3000"
+    # Allow requests from the deployed frontend and local dev
+    origins frontend_origin, "http://localhost:3000"
 
-    # Only expose GraphQL and preflight routes
-    resource "/graphql",
+    resource "*",
       headers: :any,
-      methods: [:post, :options],
+      methods: %i[get post put patch delete options head],
       credentials: false
   end
 end
