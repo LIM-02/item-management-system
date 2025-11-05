@@ -190,11 +190,26 @@ export default function DashboardPage() {
           ))}
         </select>
 
-        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "#333" }}>
+        <label
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 14,
+            color: "#f8fafc",
+            background: favoritesOnly ? "#0ea5e9" : "#1f2937",
+            border: "1px solid #334155",
+            padding: "8px 14px",
+            borderRadius: 999,
+            cursor: "pointer",
+            transition: "background 0.2s ease",
+          }}
+        >
           <input
             type="checkbox"
             checked={favoritesOnly}
             onChange={(event) => setFavoritesOnly(event.target.checked)}
+            style={{ accentColor: "#0f172a" }}
           />
           Show favourites only
         </label>
