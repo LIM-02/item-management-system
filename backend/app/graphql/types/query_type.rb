@@ -33,16 +33,13 @@ module Types
       argument :category, String, required: false, description: "Filter by an exact category name"
       argument :favorites_only, Boolean, required: false, default_value: false,
         description: "Return only favourited items when true"
-      argument :sort, Types::ItemSortEnum, required: false, default_value: Item::DEFAULT_SORT,
-        description: "Sort order to apply to the result set"
     end
 
-    def items(search: nil, category: nil, favorites_only: false, sort: Item::DEFAULT_SORT)
+    def items(search: nil, category: nil, favorites_only: false)
       ::Item.filtered(
         search:,
         category: category.to_s.presence,
-        favorites_only: favorites_only,
-        sort:
+        favorites_only: favorites_only
       )
     end
 
