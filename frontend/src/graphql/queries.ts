@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const GET_ITEMS = gql`
-  query GetItems($search: String, $category: String, $favoritesOnly: Boolean) {
-    items(search: $search, category: $category, favoritesOnly: $favoritesOnly) {
+  query GetItems($search: String, $category: String, $favoritesOnly: Boolean, $sort: ItemSortEnum!) {
+    items(search: $search, category: $category, favoritesOnly: $favoritesOnly, sort: $sort) {
       id
       name
       category

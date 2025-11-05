@@ -10,10 +10,30 @@ import type { ItemRecord } from "@/types/item";
 
 type Item = ItemRecord;
 
+type ItemSort =
+  | "NAME_ASC"
+  | "NAME_DESC"
+  | "PRICE_ASC"
+  | "PRICE_DESC"
+  | "CREATED_AT_ASC"
+  | "CREATED_AT_DESC";
+
+const SORT_OPTIONS: Array<{ value: ItemSort; label: string }> = [
+  { value: "NAME_ASC", label: "Name A → Z" },
+  { value: "NAME_DESC", label: "Name Z → A" },
+  { value: "PRICE_ASC", label: "Price low → high" },
+  { value: "PRICE_DESC", label: "Price high → low" },
+  { value: "CREATED_AT_DESC", label: "Newest first" },
+  { value: "CREATED_AT_ASC", label: "Oldest first" },
+];
+
+const DEFAULT_SORT: ItemSort = "NAME_ASC";
+
 export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [sort, setSort] = useState<ItemSort>(DEFAULT_SORT);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -24,8 +44,9 @@ export default function DashboardPage() {
       search: trimmed.length > 0 ? trimmed : undefined,
       category: selectedCategory === "All" ? undefined : selectedCategory,
       favoritesOnly,
+      sort,
     };
-  }, [search, selectedCategory, favoritesOnly]);
+  }, [search, selectedCategory, favoritesOnly, sort]);
 
   const {
     data: itemsData,
@@ -143,6 +164,18 @@ export default function DashboardPage() {
           {categoryOptions.map((option) => (
             <option key={option} value={option}>
               {option}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={sort}
+          onChange={(event) => setSort(event.target.value as ItemSort)}
+          style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", minWidth: 180 }}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
         </select>
