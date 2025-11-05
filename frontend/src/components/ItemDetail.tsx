@@ -1,24 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-
-type Item = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  favorite: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+import type { ItemRecord } from "@/types/item";
 
 export default function ItemDetail({
   item,
   onToggleFavorite,
   toggling,
 }: {
-  item: Item | null;
-  onToggleFavorite: (item: Item) => void;
+  item: ItemRecord | null;
+  onToggleFavorite: (item: ItemRecord) => void;
   toggling: boolean;
 }) {
   const priceFormatter = useMemo(

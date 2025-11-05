@@ -1,16 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-
-type Item = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  favorite: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-};
+import type { ItemRecord } from "@/types/item";
 
 export default function ItemList({
   items,
@@ -19,10 +10,10 @@ export default function ItemList({
   onToggleFavorite,
   togglingId,
 }: {
-  items: Item[];
+  items: ItemRecord[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onToggleFavorite: (item: Item) => void | Promise<void>;
+  onToggleFavorite: (item: ItemRecord) => void | Promise<void>;
   togglingId: string | null;
 }) {
   const numberFormatter = useMemo(

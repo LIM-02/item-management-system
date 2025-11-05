@@ -1,21 +1,14 @@
 "use client";
 
 import { useMutation, useQuery } from "@apollo/client/react";
-import { useMemo, useState,useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ItemDetail from "../components/ItemDetail";
 import ItemForm from "../components/ItemForm";
 import ItemList from "../components/ItemList";
 import { GET_CATEGORIES, GET_ITEMS, UPDATE_ITEM } from "../graphql/queries";
+import type { ItemRecord } from "@/types/item";
 
-type Item = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  favorite: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+type Item = ItemRecord;
 
 type ItemSort =
   | "NAME_ASC"
