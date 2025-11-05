@@ -51,17 +51,6 @@ export default function ItemForm({ onCreated }: { onCreated: () => void }) {
     fontWeight: 600,
   };
 
-  const checkboxLabelStyle: CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 6,
-    padding: "8px 12px",
-    borderRadius: 8,
-    border: "1px solid #334155",
-    background: "#111827",
-    color: "#cbd5f5",
-  };
-
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required style={inputStyle} />
@@ -80,10 +69,6 @@ export default function ItemForm({ onCreated }: { onCreated: () => void }) {
         required
         style={inputStyle}
       />
-      <label style={checkboxLabelStyle}>
-        <input type="checkbox" checked={isFavorite} onChange={(e) => setIsFavorite(e.target.checked)} />
-        Mark as favourite
-      </label>
       <button type="submit" disabled={loading} style={buttonStyle}>
         {loading ? "Creating..." : "Add"}
       </button>
