@@ -1,13 +1,22 @@
 import { gql } from "@apollo/client";
 
 export const GET_ITEMS = gql`
-  query GetItems {
-    items {
+  query GetItems($search: String, $category: String, $favoritesOnly: Boolean, $sort: ItemSortEnum!) {
+    items(search: $search, category: $category, favoritesOnly: $favoritesOnly, sort: $sort) {
       id
       name
       category
       price
+      favorite
+      createdAt
+      updatedAt
     }
+  }
+`;
+
+export const GET_CATEGORIES = gql`
+  query GetCategories {
+    categories
   }
 `;
 
@@ -19,6 +28,26 @@ export const CREATE_ITEM = gql`
         name
         category
         price
+        favorite
+        createdAt
+        updatedAt
+      }
+      errors
+    }
+  }
+`;
+
+export const UPDATE_ITEM = gql`
+  mutation UpdateItem($input: UpdateItemInput!) {
+    updateItem(input: $input) {
+      item {
+        id
+        name
+        category
+        price
+        favorite
+        createdAt
+        updatedAt
       }
       errors
     }
