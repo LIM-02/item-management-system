@@ -8,6 +8,9 @@ module Types
     field :name, String, null: false
     field :category, String, null: false
     field :price, Float, null: false
+    field :favorite, Boolean, null: false
+    field :created_at, GraphQL::Types::ISO8601DateTime, null: false, description: "When the item was first created"
+    field :updated_at, GraphQL::Types::ISO8601DateTime, null: false, description: "When the item was last updated"
 
     def price
       object.price.to_f
