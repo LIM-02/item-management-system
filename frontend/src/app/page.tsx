@@ -99,6 +99,16 @@ export default function DashboardPage() {
     [items, selectedItemId],
   );
 
+  const recommendedItems = useMemo(() => {
+    if (!selectedItem) {
+      return [];
+    }
+
+    return items
+      .filter((item) => item.id !== selectedItem.id && item.category === selectedItem.category)
+      .slice(0, 5);
+  }, [items, selectedItem]);
+
   const handleToggleFavorite = async (item: Item) => {
     setActionError(null);
     setPendingFavoriteId(item.id);
@@ -230,6 +240,8 @@ export default function DashboardPage() {
           item={selectedItem}
           onToggleFavorite={handleToggleFavorite}
           toggling={pendingFavoriteId === selectedItem?.id}
+          recommendedItems={recommendedItems}
+          onSelectRecommended={handleSelectItem}
         />
       </div>
     </div>

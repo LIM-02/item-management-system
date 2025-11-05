@@ -7,10 +7,14 @@ export default function ItemDetail({
   item,
   onToggleFavorite,
   toggling,
+  recommendedItems,
+  onSelectRecommended,
 }: {
   item: ItemRecord | null;
   onToggleFavorite: (item: ItemRecord) => void;
   toggling: boolean;
+  recommendedItems: ItemRecord[];
+  onSelectRecommended: (id: string) => void;
 }) {
   const priceFormatter = useMemo(
     () =>
@@ -73,6 +77,35 @@ export default function ItemDetail({
         <dt style={{ color: "#666" }}>Last updated</dt>
         <dd style={{ margin: 0 }}>{formatDate(item.updatedAt)}</dd>
       </dl>
+
+      <section style={{ marginTop: 24 }}>
+        <h3 style={{ marginBottom: 8 }}>Similar items</h3>
+        {recommendedItems.length === 0 ? (
+          <p style={{ margin: 0, color: "#666" }}>No similar items found.</p>
+        ) : (
+          <ul style={{ paddingLeft: 18, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+            {recommendedItems.map((related) => (
+              <li key={related.id}>
+                <button
+                  type="button"
+                  onClick={() => onSelectRecommended(related.id)}
+                  style={{
+                    border: "none",
+                    padding: 0,
+                    background: "transparent",
+                    cursor: "pointer",
+                    color: "#155e75",
+                    textDecoration: "underline",
+                  }}
+                >
+                  {related.name}
+                </button>
+                <span style={{ marginLeft: 6, color: "#666", fontSize: 13 }}>({priceFormatter.format(related.price)})</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
