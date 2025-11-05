@@ -35,7 +35,7 @@ export default function ItemDetail({
   const formatDate = (value: string) => new Date(value).toLocaleString();
 
   return (
-    <div style={{ padding: 24, border: "1px solid #155e75", borderRadius: 12, background: "#f0f9ff" }}>
+    <div style={{ padding: 24, border: "1px solid #155e75", borderRadius: 12}}>
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
         <div>
           <h2 style={{ margin: "0 0 4px" }}>{item.name}</h2>

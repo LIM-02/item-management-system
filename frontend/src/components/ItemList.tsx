@@ -41,7 +41,6 @@ export default function ItemList({
             style={{
               border: "1px solid",
               borderColor: isSelected ? "#155e75" : "#ccc",
-              background: isSelected ? "#f0f9ff" : "#fff",
               padding: "12px",
               borderRadius: 8,
               cursor: "pointer",

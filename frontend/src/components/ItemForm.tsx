@@ -36,10 +36,6 @@ export default function ItemForm({ onCreated }: { onCreated: () => void }) {
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
       <input placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} required />
       <input type="number" placeholder="Price" value={price} onChange={(e) => setPrice(e.target.value)} required />
-      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 14 }}>
-        <input type="checkbox" checked={isFavorite} onChange={(e) => setIsFavorite(e.target.checked)} />
-        Mark as favourite
-      </label>
       <button type="submit" disabled={loading}>
         {loading ? "Creating..." : "Add"}
       </button>
