@@ -7,6 +7,7 @@ export default function ItemForm({ onCreated }: { onCreated: () => void }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
+  const [isFavorite, setIsFavorite] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [createItem, { loading }] = useMutation(CREATE_ITEM, {
@@ -14,6 +15,7 @@ export default function ItemForm({ onCreated }: { onCreated: () => void }) {
       setName("");
       setCategory("");
       setPrice("");
+      setIsFavorite(false);
       onCreated();
     },
   });
@@ -26,14 +28,18 @@ export default function ItemForm({ onCreated }: { onCreated: () => void }) {
       return;
     }
     setError(null);
-    await createItem({ variables: { input: { name, category, price: parsed } } });
+    await createItem({ variables: { input: { name, category, price: parsed, favorite: isFavorite } } });
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8 }}>
+    <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
       <input placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} required />
       <input type="number" placeholder="Price" value={price} onChange={(e) => setPrice(e.target.value)} required />
+      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 14 }}>
+        <input type="checkbox" checked={isFavorite} onChange={(e) => setIsFavorite(e.target.checked)} />
+        Mark as favourite
+      </label>
       <button type="submit" disabled={loading}>
         {loading ? "Creating..." : "Add"}
       </button>
