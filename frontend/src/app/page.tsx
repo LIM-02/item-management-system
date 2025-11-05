@@ -1,113 +1,228 @@
 "use client";
 
-import { useQuery } from "@apollo/client/react";
-import { useMemo, useState, useEffect } from "react";
-import { GET_ITEMS } from "../graphql/queries";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { useMemo, useState,useEffect } from "react";
+import ItemDetail from "../components/ItemDetail";
 import ItemForm from "../components/ItemForm";
 import ItemList from "../components/ItemList";
+import { GET_CATEGORIES, GET_ITEMS, UPDATE_ITEM } from "../graphql/queries";
 
-type Item = { 
-  id: string; 
+type Item = {
+  id: string;
   name: string;
   category: string;
   price: number;
-}; 
+  favorite: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
 
-const EMPTY_ITEMS: Item[] = [];
+type ItemSort =
+  | "NAME_ASC"
+  | "NAME_DESC"
+  | "PRICE_ASC"
+  | "PRICE_DESC"
+  | "CREATED_AT_ASC"
+  | "CREATED_AT_DESC";
+
+const SORT_OPTIONS: Array<{ value: ItemSort; label: string }> = [
+  { value: "NAME_ASC", label: "Name A → Z" },
+  { value: "NAME_DESC", label: "Name Z → A" },
+  { value: "PRICE_ASC", label: "Price low → high" },
+  { value: "PRICE_DESC", label: "Price high → low" },
+  { value: "CREATED_AT_DESC", label: "Newest first" },
+  { value: "CREATED_AT_ASC", label: "Oldest first" },
+];
+
+const DEFAULT_SORT: ItemSort = "NAME_ASC";
 
 export default function DashboardPage() {
-  const { data, loading, error, refetch } = useQuery<{ items: Item[] }>(GET_ITEMS);
-  const items = data?.items ?? EMPTY_ITEMS;
-
-  // search & filters
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [showFavOnly, setShowFavOnly] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [sort, setSort] = useState<ItemSort>(DEFAULT_SORT);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  // favourites
-  const [favs, setFavs] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") {
-      return new Set();
-    }
-    try {
-      const raw = window.localStorage.getItem("favs");
-      return raw ? new Set<string>(JSON.parse(raw)) : new Set();
-    } catch {
-      return new Set();
-    }
+  const itemFilters = useMemo(() => {
+    const trimmed = search.trim();
+    return {
+      search: trimmed.length > 0 ? trimmed : undefined,
+      category: selectedCategory === "All" ? undefined : selectedCategory,
+      favoritesOnly,
+      sort,
+    };
+  }, [search, selectedCategory, favoritesOnly, sort]);
+
+  const {
+    data: itemsData,
+    loading: itemsLoading,
+    error: itemsError,
+    refetch,
+  } = useQuery<{ items: Item[] }>(GET_ITEMS, {
+    variables: itemFilters,
   });
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("favs", JSON.stringify(Array.from(favs)));
-    }
-  }, [favs]);
+  const items = useMemo(() => itemsData?.items ?? [], [itemsData]);
 
-  const toggleFav = (id: string) => {
-    setFavs((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+  const { data: categoriesData } = useQuery<{ categories: string[] }>(GET_CATEGORIES);
+  const categoryOptions = useMemo(() => {
+    const categories = categoriesData?.categories ?? [];
+    return ["All", ...categories];
+  }, [categoriesData]);
+
+  const [updateItem] = useMutation(UPDATE_ITEM);
+
+  useEffect(() => {
+    if (items.length === 0) {
+      setSelectedItemId(null);
+      return;
+    }
+
+    if (!selectedItemId || !items.some((item) => item.id === selectedItemId)) {
+      setSelectedItemId(items[0].id);
+    }
+  }, [items, selectedItemId]);
+
+  const selectedItem = useMemo(
+    () => items.find((item) => item.id === selectedItemId) ?? null,
+    [items, selectedItemId],
+  );
+
+  const handleToggleFavorite = async (item: Item) => {
+    setActionError(null);
+    setPendingFavoriteId(item.id);
+
+    try {
+      const { data } = await updateItem({
+        variables: { input: { id: item.id, favorite: !item.favorite } },
+      });
+
+      const errors = data?.updateItem.errors ?? [];
+      if (errors.length > 0) {
+        setActionError(errors.join(", "));
+        return;
+      }
+
+      await refetch();
+    } catch (err) {
+      console.error(err);
+      setActionError("Failed to update favourite state. Please try again.");
+    } finally {
+      setPendingFavoriteId(null);
+    }
   };
 
-  const categories = useMemo(() => {
-    const unique = new Set(items.map(i => i.category));
-    return ["All", ...Array.from(unique)];
-  }, [items]);
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return items.filter(item => {
-      const matchCategory = category === "All" || item.category === category;
-      const matchSearch =
-        item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q);
-      const matchFav = !showFavOnly || favs.has(item.id);
-      return matchCategory && matchSearch && matchFav;
-    });
-  }, [items, search, category, showFavOnly, favs]);
+  const handleSelectItem = (id: string) => {
+    setSelectedItemId(id);
+  };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1>Item Dashboard</h1>
+    <div style={{ padding: "24px", fontFamily: "Inter, Arial, sans-serif", maxWidth: 1040, margin: "0 auto" }}>
+      <h1 style={{ marginBottom: 16 }}>Item Dashboard</h1>
 
-      <ItemForm onCreated={refetch} />
+      <ItemForm onCreated={() => refetch()} />
 
-      <div style={{ display: "flex", gap: "8px", marginTop: "10px", alignItems: "center" }}>
-        <input 
-        type="search" 
-        placeholder="Search items..." 
-        value={search} 
-        onChange={(e) => setSearch(e.target.value)} 
-        style={{ padding: "8px", flex: 1 }}
+      <section
+        style={{
+          marginTop: 24,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 12,
+          alignItems: "center",
+        }}
+      >
+        <input
+          type="search"
+          placeholder="Search items..."
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          style={{
+            flex: 1,
+            minWidth: 220,
+            padding: "10px 12px",
+            borderRadius: 8,
+            border: "1px solid #ccc",
+          }}
         />
 
-        <select 
-        value={category} 
-        onChange={(e) => setCategory(e.target.value)} 
-        style={{ padding: "8px", minWidth: "160px" }}
+        <select
+          value={selectedCategory}
+          onChange={(event) => setSelectedCategory(event.target.value)}
+          style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", minWidth: 180 }}
         >
-          {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
-            ))}
+          {categoryOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
+
+        <select
+          value={sort}
+          onChange={(event) => setSort(event.target.value as ItemSort)}
+          style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ccc", minWidth: 180 }}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "#333" }}>
-          <input 
-            type="checkbox" 
-            checked={showFavOnly} 
-            onChange={(e) => setShowFavOnly(e.target.checked)} 
-            />
+          <input
+            type="checkbox"
+            checked={favoritesOnly}
+            onChange={(event) => setFavoritesOnly(event.target.checked)}
+          />
           Show favourites only
         </label>
+      </section>
+
+      <div style={{ marginTop: 12, color: "#555", fontSize: 14 }}>
+        {itemsLoading && "Loading items..."}
+        {itemsError && <span style={{ color: "#b91c1c" }}>Unable to load items.</span>}
+        {!itemsLoading && !itemsError && `Showing ${items.length} item${items.length === 1 ? "" : "s"}`}
       </div>
 
-      <div style={{ marginTop: "10px", color: "#666", fontSize: "14px" }}>
-        {loading && "Loading items..."}
-        {!loading && !error && `Showing ${filtered.length} of ${items.length}`}
-        {error && <span style={{ color: "#c00" }}>Failed to load items.</span>}
-      </div>
+      {actionError && (
+        <div
+          style={{
+            marginTop: 12,
+            padding: "12px 16px",
+            borderRadius: 8,
+            background: "#fef2f2",
+            color: "#b91c1c",
+          }}
+        >
+          {actionError}
+        </div>
+      )}
 
-      <ItemList items={filtered} favs={favs} toggleFav={toggleFav} />
+      <div
+        style={{
+          marginTop: 24,
+          display: "grid",
+          gap: 24,
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          alignItems: "start",
+        }}
+      >
+        <ItemList
+          items={items}
+          selectedId={selectedItemId}
+          onSelect={handleSelectItem}
+          onToggleFavorite={handleToggleFavorite}
+          togglingId={pendingFavoriteId}
+        />
+        <ItemDetail
+          item={selectedItem}
+          onToggleFavorite={handleToggleFavorite}
+          toggling={pendingFavoriteId === selectedItem?.id}
+        />
+      </div>
     </div>
   );
 }
