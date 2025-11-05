@@ -8,6 +8,8 @@ type Item = {
   category: string;
   price: number;
   favorite: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export default function ItemList({
@@ -20,7 +22,7 @@ export default function ItemList({
   items: Item[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onToggleFavorite: (item: Item) => void;
+  onToggleFavorite: (item: Item) => void | Promise<void>;
   togglingId: string | null;
 }) {
   const numberFormatter = useMemo(
