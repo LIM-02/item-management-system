@@ -72,7 +72,23 @@ export default function DashboardPage() {
     return ["All", ...categories];
   }, [categoriesData]);
 
-  const [updateItem] = useMutation(UPDATE_ITEM);
+  type UpdateItemResponse = {
+    updateItem: {
+      errors: string[];
+    };
+  };
+
+  type UpdateItemVariables = {
+    input: {
+      id: string;
+      favorite?: boolean;
+      name?: string;
+      category?: string;
+      price?: number;
+    };
+  };
+
+  const [updateItem] = useMutation<UpdateItemResponse, UpdateItemVariables>(UPDATE_ITEM);
 
   useEffect(() => {
     if (items.length === 0) {
